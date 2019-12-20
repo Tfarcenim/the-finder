@@ -36,6 +36,7 @@ public class Xray
     }
 
     static KeyBinding scan = new KeyBinding(MODID, GLFW.GLFW_KEY_X, MODID);
+    static KeyBinding scanmob = new KeyBinding(MODID, GLFW.GLFW_KEY_Y, MODID);
 
 
 
