@@ -39,14 +39,6 @@ public class EventHandler {
       ActiveRenderInfo camera = TileEntityRendererDispatcher.instance.camera;
       MatrixStack matrixStack = e.getMatrixStack();
 
-      RenderSystem.disableTexture();
-      RenderSystem.disableDepthTest();
-      RenderSystem.depthMask( false );
-      RenderSystem.polygonMode( GL_FRONT_AND_BACK, GL_LINE );
-      RenderSystem.blendFunc( GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA );
-      RenderSystem.enableBlend();
-      RenderSystem.lineWidth( .001f );
-
       Utils.posIntegerMap.forEach((pos, stack) -> {
 
         Vec3d vec3d = camera.getPosition();
@@ -70,13 +62,6 @@ public class EventHandler {
         WorldRenderer.renderLineBox(matrixStack, ivertexbuilder2,axisAlignedBB, 1,1,1,1);
         irendertypebuffer$impl.endBatch(RenderType.LINES);
       });
-
-      RenderSystem.polygonMode( GL_FRONT_AND_BACK, GL_FILL );
-      RenderSystem.disableBlend();
-      RenderSystem.enableDepthTest();
-      RenderSystem.depthMask( true );
-      RenderSystem.enableTexture();
-
 
     }
     else if (Screen.hasControlDown()){
