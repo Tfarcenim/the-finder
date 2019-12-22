@@ -1,12 +1,12 @@
 package com.tfar.examplemod;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -21,7 +21,6 @@ import net.minecraftforge.client.event.DrawHighlightEvent;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
 
@@ -35,21 +34,21 @@ public class Utils {
   public static void scan(){
     int r = 64;
     posIntegerMap.clear();
-    BlockPos playerPos = mc.player.getPosition();
-    World world = mc.world;
+    BlockPos playerPos = mc.player.getCommandSenderBlockPosition();
+    World world = mc.level;
     BlockPos
-            .getAllInBox(playerPos.add(-r,-r,-r),playerPos.add(r,r,r))
+            .betweenClosedStream(playerPos.offset(-r,-r,-r),playerPos.offset(r,r,r))
             .forEach(pos -> {
-              if (matches(world.getBlockState(pos).getBlock()))posIntegerMap.put(pos.toImmutable(),getColor(world.getBlockState(pos).getBlock()));
+              if (matches(world.getBlockState(pos).getBlock()))posIntegerMap.put(pos.immutable(),getColor(world.getBlockState(pos).getBlock()));
             });
   }
 
 
   public static void scanMob(){
     mobLocMap.clear();
-    ClientWorld world = mc.world;
-    StreamSupport.stream(world.getAllEntities().spliterator(),false)
-            .filter(CreeperEntity.class::isInstance).forEach(entity -> mobLocMap.put(entity.getPositionVec(),0x00ff00));
+    ClientWorld world = mc.level;
+    StreamSupport.stream(world.entitiesForRendering().spliterator(),false)
+            .filter(CreeperEntity.class::isInstance).forEach(entity -> mobLocMap.put(entity.position(),0x00ff00));
   }
 
   public static boolean matches(Block block){
@@ -65,7 +64,7 @@ public class Utils {
   public static void drawMobBox(RenderWorldLastEvent e, Vec3d pos, int color) {
 
     if (creeperEntity == null){
-      creeperEntity = EntityType.CREEPER.create(Minecraft.getInstance().world);
+      creeperEntity = EntityType.CREEPER.create(Minecraft.getInstance().level);
     }
 
     AxisAlignedBB axisAlignedBB = creeperEntity.getBoundingBox();
@@ -74,53 +73,35 @@ public class Utils {
 
     MatrixStack matrixStack = e.getMatrixStack();
 
-    ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getActiveRenderInfo();
+    ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getMainCamera();
 
-    Vec3d vec3d = camera.getProjectedView();
-    double x = -(vec3d.getX() - pos.x);
-    double y = -(vec3d.getY()- pos.y);
-    double z = -(vec3d.getZ()- pos.z);
+    Vec3d vec3d = camera.getPosition();
+    double x = -(vec3d.x - pos.x);
+    double y = -(vec3d.y- pos.y);
+    double z = -(vec3d.z- pos.z);
 
-    IRenderTypeBuffer.Impl irendertypebuffer$impl = renderer.field_228415_m_.func_228487_b_();
-    IVertexBuilder ivertexbuilder2 = irendertypebuffer$impl.getBuffer(RenderType.func_228659_m_());
 
-    matrixStack.func_227860_a_();
-    matrixStack.func_227861_a_(x,y,z);
-    WorldRenderer.func_228430_a_(matrixStack, ivertexbuilder2,axisAlignedBB,(color >> 16 & 0xff) / 256f, (color >> 8 & 0xff) / 256f, (color & 0xff) / 256f, 1);
-    matrixStack.func_227865_b_();
+    IRenderTypeBuffer.Impl irendertypebuffer$impl = renderer.renderBuffers.bufferSource();
+    IVertexBuilder ivertexbuilder2 = irendertypebuffer$impl.getBuffer(RenderType.lines());
+
+    matrixStack.pushPose();
+    matrixStack.translate(x,y,z);
+    WorldRenderer.renderLineBox(matrixStack, ivertexbuilder2,axisAlignedBB,(color >> 16 & 0xff) / 256f, (color >> 8 & 0xff) / 256f, (color & 0xff) / 256f, 1);
+    matrixStack.popPose();
 
   }
 
 
-  public static void drawBoundingBox(RenderWorldLastEvent e, BlockPos pos, int color) {
 
-    WorldRenderer renderer = e.getContext();
 
-    MatrixStack matrixStack = e.getMatrixStack();
-
-    ActiveRenderInfo camera = Minecraft.getInstance().gameRenderer.getActiveRenderInfo();
-
-    Vec3d vec3d = camera.getProjectedView();
-    double x = vec3d.getX();
-    double y = vec3d.getY();
-    double z = vec3d.getZ();
-
-    IRenderTypeBuffer.Impl irendertypebuffer$impl = renderer.field_228415_m_.func_228487_b_();
-    IVertexBuilder ivertexbuilder2 = irendertypebuffer$impl.getBuffer(RenderType.func_228659_m_());
-
-    matrixStack.func_227860_a_();
-    drawBlockOutline(matrixStack, ivertexbuilder2, x, y, z, pos,color);
-    matrixStack.func_227865_b_();
+  static void renderHitOutline(MatrixStack p_228429_1_, IVertexBuilder p_228429_2_, double p_228429_4_, double p_228429_6_, double p_228429_8_, BlockPos p_228429_10_) {
+    renderShape(p_228429_1_, p_228429_2_, VoxelShapes.block(), (double)p_228429_10_.getX() - p_228429_4_, (double)p_228429_10_.getY() - p_228429_6_, (double)p_228429_10_.getZ() - p_228429_8_, 0.0F, 0.0F, 0.0F, 0.4F);
   }
-  private static void drawBlockOutline(MatrixStack stack, IVertexBuilder iVertexBuilder, double x, double y, double z, BlockPos p_228429_10_, int color) {
-    drawBox(stack, iVertexBuilder, VoxelShapes.fullCube(), (double)p_228429_10_.getX() - x, (double)p_228429_10_.getY() - y, (double)p_228429_10_.getZ() - z,(color >> 16 & 0xff) / 256f, (color >> 8 & 0xff) / 256f, (color & 0xff) / 256f, 1);
-  }
-
-  private static void drawBox(MatrixStack stack, IVertexBuilder iVertexBuilder, VoxelShape p_228445_2_, double p_228445_3_, double p_228445_5_, double p_228445_7_, float red, float green, float blue, float alpha) {
-    Matrix4f matrix4f = stack.func_227866_c_().func_227870_a_();
-    p_228445_2_.forEachEdge((p_230013_12_, p_230013_14_, p_230013_16_, p_230013_18_, p_230013_20_, p_230013_22_) -> {
-      iVertexBuilder.func_227888_a_(matrix4f, (float)(p_230013_12_ + p_228445_3_), (float)(p_230013_14_ + p_228445_5_), (float)(p_230013_16_ + p_228445_7_)).func_227885_a_(red, green, blue, alpha).endVertex();
-      iVertexBuilder.func_227888_a_(matrix4f, (float)(p_230013_18_ + p_228445_3_), (float)(p_230013_20_ + p_228445_5_), (float)(p_230013_22_ + p_228445_7_)).func_227885_a_(red, green, blue, alpha).endVertex();
+  private static void renderShape(MatrixStack matrixStack, IVertexBuilder iVertexBuilder, VoxelShape voxelShape, double x, double p_228445_5_, double p_228445_7_, float red, float green, float blue, float alpha) {
+    Matrix4f matrix4f = matrixStack.last().pose();
+    voxelShape.forAllEdges((x1, p_230013_14_, p_230013_16_, x2, p_230013_20_, p_230013_22_) -> {
+      iVertexBuilder.vertex(matrix4f, (float)(x1 + x), (float)(p_230013_14_ + p_228445_5_), (float)(p_230013_16_ + p_228445_7_)).color(red, green, blue, alpha).endVertex();
+      iVertexBuilder.vertex(matrix4f, (float)(x2 + x), (float)(p_230013_20_ + p_228445_5_), (float)(p_230013_22_ + p_228445_7_)).color(red, green, blue, alpha).endVertex();
     });
   }
 

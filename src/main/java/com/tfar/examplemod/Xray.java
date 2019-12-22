@@ -1,11 +1,9 @@
 package com.tfar.examplemod;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraft.item.Item;
-import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -31,12 +29,17 @@ public class Xray
 
     private void doClientStuff(final FMLClientSetupEvent event) {
 
+       // Minecraft.getInstance().levelRenderer = new WorldRendererEX(Minecraft.getInstance(),
+       //         Minecraft.getInstance().levelRenderer.renderBuffers);
+
         EVENT_BUS.register(EventHandler.instance);
         XrayConfig.handle();
+        ClientRegistry.registerKeyBinding(scan);
+        ClientRegistry.registerKeyBinding(scanmob);
     }
 
-    static KeyBinding scan = new KeyBinding(MODID, GLFW.GLFW_KEY_X, MODID);
-    static KeyBinding scanmob = new KeyBinding(MODID, GLFW.GLFW_KEY_Y, MODID);
+    static KeyBinding scan = new KeyBinding(MODID+1, GLFW.GLFW_KEY_I, MODID);
+    static KeyBinding scanmob = new KeyBinding(MODID+2, GLFW.GLFW_KEY_O, MODID);
 
 
 
