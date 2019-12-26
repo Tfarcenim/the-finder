@@ -26,7 +26,7 @@ import java.util.stream.StreamSupport;
 
 public class Utils {
 
-  private static final Minecraft mc = Minecraft.getInstance();
+  static final Minecraft mc = Minecraft.getInstance();
 
   public static Map<BlockPos,Integer> posIntegerMap = new HashMap<>();
   public static Map<Vec3d,Integer> mobLocMap = new HashMap<>();

@@ -1,6 +1,5 @@
 package com.tfar.examplemod;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -28,9 +27,6 @@ public class Xray
     }
 
     private void doClientStuff(final FMLClientSetupEvent event) {
-
-       // Minecraft.getInstance().levelRenderer = new WorldRendererEX(Minecraft.getInstance(),
-       //         Minecraft.getInstance().levelRenderer.renderBuffers);
 
         EVENT_BUS.register(EventHandler.instance);
         XrayConfig.handle();
