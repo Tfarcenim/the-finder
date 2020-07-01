@@ -117,16 +117,6 @@ public class Render {
         RenderSystem.depthMask(true);
         RenderSystem.enableTexture();
       }
-    },
-    // TODO:
-    ENTITIES {
-      @Override
-      public void apply() {
-      }
-
-      @Override
-      public void clean() {
-      }
     };
 
     Profile() {
